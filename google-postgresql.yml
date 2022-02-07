@@ -72,6 +72,63 @@ provision:
   #   type: boolean
   #   details: Use TLS for connection
   #   default: true
+  - field_name: deletion_protection
+    type: boolean
+    details: Test deletion protection
+  - field_name: activation_policy
+    type: string
+    details: Test activiation policy
+  - field_name: availability_type
+    type: string
+    details: Test availability_type policy
+  - field_name: collation
+    type: string
+    details: Test collation policy
+  - field_name: disk_autoresize
+    type: boolean
+    details: Test disk_autoresize policy
+  - field_name: disk_size
+    type: number
+    details: Test disk_size policy
+  - field_name: disk_type
+    type: string
+    details: Test disk_type policy
+  - field_name: pricing_plan
+    type: string
+    details: Test pricing_plan policy
+  - field_name: master_instance_name
+    type: string
+    details: Test master_instance_name policy
+#  - field_name: replica_configuration
+#    type: object
+#    details: Testreplica_configuration policy
+  - field_name: root_password
+    type: string
+    details: Test root_password policy
+#  - field_name: restore_backup_context
+#    type: object
+#    details: Test restore_backup_context policy
+#  - field_name: clone
+#    type: object
+#    details: Test clone policy
+  - field_name: binary_log_enabled
+    type: boolean
+    details: Test binary_log_enabled policy
+  - field_name: enabled
+    type: boolean
+    details: Test enabled policy
+  - field_name: start_time
+    type: string
+    details: Test start_time policy
+  - field_name: point_in_time_recovery_enabled
+    type: boolean
+    details: Test point_in_time_recovery_enabled policy
+  - field_name: location
+    type: string
+    details: Test location policy
+  - field_name: transaction_log_retention_days
+    type: number
+    details: Test transaction_log_retention_days policy
   - field_name: credentials
     type: string
     details: GCP credentials
