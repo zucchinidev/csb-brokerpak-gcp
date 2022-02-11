@@ -20,6 +20,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"runtime"
 	"text/template"
 	"time"
 )
@@ -182,7 +183,7 @@ func (instance TestCSBInstance) BrokerUrl(subPath string) string {
 
 func BuildBrokerWithProvider(provider TerraformMock) TestCSBInstance {
 	// build binary
-	brokerPackDir := "/Users/jatinnaik/workspace/csb/csb-brokerpak-gcp/"
+	brokerPackDir := PathToBrokerPack()
 	csbBuild, err := gexec.Build("github.com/cloudfoundry-incubator/cloud-service-broker")
 	Expect(err).NotTo(HaveOccurred())
 
@@ -203,6 +204,12 @@ func BuildBrokerWithProvider(provider TerraformMock) TestCSBInstance {
 	return TestCSBInstance{brokerBuild: csbBuild, workspace: workingDir, username: "u", password: "p", port: "8080"}
 }
 
+func PathToBrokerPack() string {
+	_, file, _, _ := runtime.Caller(1)
+
+	return filepath.Dir(filepath.Dir(file))
+}
+
 func createWorkspace(brokerPackDir string, build string) (string, error) {
 	workingDir, err := ioutil.TempDir("", "prefix")
 	if err != nil {
@@ -217,7 +224,7 @@ func createWorkspace(brokerPackDir string, build string) (string, error) {
 }
 
 func linkBrokerpackFiles(brokerPackDir string, workingDir string) error {
-	yamlFiles, err := filepath.Glob(brokerPackDir + "*.yml")
+	yamlFiles, err := filepath.Glob(brokerPackDir + "/*.yml")
 	if err != nil {
 		return err
 	}

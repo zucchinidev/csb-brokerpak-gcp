@@ -47,6 +47,7 @@ var _ = Describe("Mysql", Ordered, func() {
 		Expect(err).To(HaveOccurred())
 		Expect(err).To(MatchError(ContainSubstring("plan defined properties cannot be changed: cores")))
 	})
+
 	It("user should be able to update database name", func() {
 		err := broker.Provision("csb-google-mysql", "small", map[string]interface{}{"db_name": "foobar"})
 
@@ -54,6 +55,6 @@ var _ = Describe("Mysql", Ordered, func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(invocations).To(HaveLen(1))
 
-		Expect(invocations[0].TFVars()).To(HaveKeyWithValue("db_name", "foobar1"))
+		Expect(invocations[0].TFVars()).To(HaveKeyWithValue("db_name", "foobar"))
 	})
 })
