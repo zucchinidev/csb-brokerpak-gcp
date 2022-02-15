@@ -1,4 +1,4 @@
-package integration_tests
+package testframework
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 )
 
 type TerraformMock struct {
-	binary          string
+	Binary          string
 	invocationStore string
 }
 
@@ -80,5 +80,5 @@ func NewTerraformMock() (TerraformMock, error) {
 	if err != nil {
 		return TerraformMock{}, err
 	}
-	return TerraformMock{binary: build, invocationStore: dir}, nil
+	return TerraformMock{Binary: build, invocationStore: dir}, nil
 }

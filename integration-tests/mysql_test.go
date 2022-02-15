@@ -1,19 +1,20 @@
 package integration_tests
 
 import (
+	"github.com/cloudfoundry-incubator/csb-brokerpak-gcp/integration-tests/testframework"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Mysql", Ordered, func() {
-	var mockTerraform TerraformMock
-	var broker TestCSBInstance
+	var mockTerraform testframework.TerraformMock
+	var broker testframework.TestCSBInstance
 
 	BeforeAll(func() {
 		var err error
-		mockTerraform, err = NewTerraformMock()
+		mockTerraform, err = testframework.NewTerraformMock()
 		Expect(err).NotTo(HaveOccurred())
-		broker = BuildBrokerWithProvider(mockTerraform)
+		broker = testframework.BuildBrokerWithProvider(testframework.PathToBrokerPack(), mockTerraform)
 		broker.Start()
 	})
 	AfterEach(func() {
@@ -22,7 +23,7 @@ var _ = Describe("Mysql", Ordered, func() {
 	It("publish mysql in the catalog", func() {
 		catalog, err := broker.Catalog()
 		Expect(err).NotTo(HaveOccurred())
-		service := FindService(catalog, "csb-google-mysql")
+		service := testframework.FindService(catalog, "csb-google-mysql")
 		Expect(service.Plans).To(HaveLen(3))
 		Expect(service.Tags).To(ContainElement("preview"))
 		Expect(service.Metadata.ImageUrl).NotTo(BeNil())
@@ -42,10 +43,14 @@ var _ = Describe("Mysql", Ordered, func() {
 
 	})
 
-	It("user should not allow changing mysql cores", func() {
-		err := broker.Provision("csb-google-mysql", "small", map[string]interface{}{"cores": 5})
-		Expect(err).To(HaveOccurred())
-		Expect(err).To(MatchError(ContainSubstring("plan defined properties cannot be changed: cores")))
+	It("user should be able to update database name", func() {
+		err := broker.Provision("csb-google-mysql", "small", map[string]interface{}{"db_name": "foobar"})
+
+		invocations, err := mockTerraform.ApplyInvocations()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(invocations).To(HaveLen(1))
+
+		Expect(invocations[0].TFVars()).To(HaveKeyWithValue("db_name", "foobar"))
 	})
 
 	It("user should be able to update database name", func() {
@@ -56,5 +61,23 @@ var _ = Describe("Mysql", Ordered, func() {
 		Expect(invocations).To(HaveLen(1))
 
 		Expect(invocations[0].TFVars()).To(HaveKeyWithValue("db_name", "foobar"))
+	})
+
+	It("user should not be allowed to change mysql cores", func() {
+		err := broker.Provision("csb-google-mysql", "small", map[string]interface{}{"cores": 5})
+		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(ContainSubstring("plan defined properties cannot be changed: cores")))
+	})
+
+	It("should validate region", func() {
+		err := broker.Provision("csb-google-mysql", "small", map[string]interface{}{"region": "invalid-region"})
+		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(ContainSubstring("region must be one of the following:")))
+	})
+
+	It("should validate instance name length", func() {
+		err := broker.Provision("csb-google-mysql", "small", map[string]interface{}{"instance_name": "2smol"})
+		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(ContainSubstring("instance_name: String length must be greater than or equal to 6")))
 	})
 })

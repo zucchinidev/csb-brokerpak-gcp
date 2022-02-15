@@ -1,4 +1,4 @@
-package integration_tests
+package testframework
 
 import (
 	"bytes"
@@ -20,7 +20,6 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"runtime"
 	"text/template"
 	"time"
 )
@@ -181,16 +180,15 @@ func (instance TestCSBInstance) BrokerUrl(subPath string) string {
 	return fmt.Sprintf("http://localhost:%s/v2/%s", instance.port, subPath)
 }
 
-func BuildBrokerWithProvider(provider TerraformMock) TestCSBInstance {
+func BuildBrokerWithProvider(brokerPackDir string, provider TerraformMock) TestCSBInstance {
 	// build binary
-	brokerPackDir := PathToBrokerPack()
 	csbBuild, err := gexec.Build("github.com/cloudfoundry-incubator/cloud-service-broker")
 	Expect(err).NotTo(HaveOccurred())
 
 	// create manifest.yml
 	// we can replace the template, after this code is moved over the csb codebase,
 	// when it has access to the internal manifest package
-	workingDir, err := createWorkspace(brokerPackDir, provider.binary)
+	workingDir, err := createWorkspace(brokerPackDir, provider.Binary)
 	Expect(err).NotTo(HaveOccurred())
 
 	// build the broker pack
@@ -204,11 +202,7 @@ func BuildBrokerWithProvider(provider TerraformMock) TestCSBInstance {
 	return TestCSBInstance{brokerBuild: csbBuild, workspace: workingDir, username: "u", password: "p", port: "8080"}
 }
 
-func PathToBrokerPack() string {
-	_, file, _, _ := runtime.Caller(1)
 
-	return filepath.Dir(filepath.Dir(file))
-}
 
 func createWorkspace(brokerPackDir string, build string) (string, error) {
 	workingDir, err := ioutil.TempDir("", "prefix")

@@ -1,4 +1,4 @@
-package integration_tests
+package testframework
 
 import (
 	"github.com/pivotal-cf/brokerapi/v8/domain"
