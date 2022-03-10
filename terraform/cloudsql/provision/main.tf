@@ -38,4 +38,5 @@ resource "google_sql_user" "admin_user" {
   name     = random_string.username.result
   instance = google_sql_database_instance.instance.name
   password = random_password.password.result
+  deletion_policy="ABANDON"
 }

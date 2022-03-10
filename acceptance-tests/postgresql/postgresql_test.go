@@ -14,6 +14,7 @@ var _ = Describe("PostgreSQL", func() {
 	It("can be accessed by an app", func() {
 		By("creating a service instance")
 		serviceInstance := services.CreateInstance("csb-google-postgres", "small")
+
 		defer serviceInstance.Delete()
 
 		By("pushing the unstarted app twice")
@@ -44,7 +45,20 @@ var _ = Describe("PostgreSQL", func() {
 		got := appTwo.GET("%s/%s", schema, key)
 		Expect(got).To(Equal(value))
 
-		By("dropping the schema using the first app")
-		appOne.DELETE(schema)
+		By("unbinding the first app")
+		binding.Unbind()
+
+		By("getting the value again using the second app")
+		got2 := appTwo.GET("%s/%s", schema, key)
+		Expect(got2).To(Equal(value))
+
+		By("setting a value")
+		key2 := random.Hexadecimal()
+		value2 := random.Hexadecimal()
+		appTwo.PUT(value2, key2)
+
+		By("getting the other value using the second app")
+		got3 := appTwo.GET("%s/%s", schema, key2)
+		Expect(got3).To(Equal(value2))
 	})
 })

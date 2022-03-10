@@ -14,10 +14,8 @@ resource "random_password" "password" {
 
 resource "postgresql_role" "new_user" {
   name                = random_string.username.result
-  login               = true
+  login               = !var.pre_delete
   password            = random_password.password.result
-  skip_reassign_owned = true
-  skip_drop_role      = true
 }
 
 resource "postgresql_grant" "db_access" {
