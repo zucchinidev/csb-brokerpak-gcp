@@ -1,25 +1,17 @@
 output "username" { value = random_string.username.result }
 output "password" {
   sensitive = true
-  value     = random_password.password.result
+  value     = random_password.user_password.result
 }
 output "uri" {
   sensitive = true
   value = format("postgresql://%s:%s@%s:%d/%s",
     random_string.username.result,
-    random_password.password.result,
+    random_password.user_password.result,
     var.hostname,
     var.port,
   var.db_name)
 }
-/* output jdbcUrl {
-  value = format("jdbc:postgresql://%s:%d/%s?user=%s\u0026password=%s\u0026useSSL=false",
-                  var.hostname,
-                  var.port,
-                  var.db_name,
-                  random_string.username.result,
-                  random_password.password.result)
-} */
 
 output "jdbcUrl" {
   sensitive = true
@@ -29,6 +21,10 @@ output "jdbcUrl" {
     var.port,
     var.db_name,
     random_string.username.result,
-    random_password.password.result,
+    random_password.user_password.result,
   var.use_tls)
 }
+
+# output "nologin_id" {
+#   value     = "nologin_role"
+# }

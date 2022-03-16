@@ -4,7 +4,7 @@ resource "random_string" "username" {
   number  = false
 }
 
-resource "random_password" "password" {
+resource "random_password" "user_password" {
   length           = 64
   override_special = "~_-."
   min_upper        = 2
@@ -12,10 +12,29 @@ resource "random_password" "password" {
   min_special      = 2
 }
 
+resource "random_password" "nologin_password" {
+  length           = 64
+  override_special = "~_-."
+  min_upper        = 2
+  min_lower        = 2
+  min_special      = 2
+}
+
+# resource "postgresql_role" "nologin_role" {
+#   count = create_nologin_role ? 1 : 0
+#   name                = "nologin_role"
+#   password            = random_password.nologin_password.result
+#   login               = false
+#   // skip destroy
+# }
+
 resource "postgresql_role" "new_user" {
   name                = random_string.username.result
-  login               = !var.pre_delete
-  password            = random_password.password.result
+  password            = random_password.user_password.result
+  login               = true
+  roles               = [
+    var.nologin_user_role
+  ]
 }
 
 resource "postgresql_grant" "db_access" {

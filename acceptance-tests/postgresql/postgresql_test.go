@@ -47,6 +47,7 @@ var _ = Describe("PostgreSQL", func() {
 
 		By("unbinding the first app")
 		binding.Unbind()
+		//restart app 
 
 		By("getting the value again using the second app")
 		got2 := appTwo.GET("%s/%s", schema, key)
@@ -55,10 +56,13 @@ var _ = Describe("PostgreSQL", func() {
 		By("setting a value")
 		key2 := random.Hexadecimal()
 		value2 := random.Hexadecimal()
-		appTwo.PUT(value2, key2)
+		appTwo.PUT(value2, "%s/%s", schema, key2)
 
 		By("getting the other value using the second app")
 		got3 := appTwo.GET("%s/%s", schema, key2)
 		Expect(got3).To(Equal(value2))
+
+		By("dropping the schema using the second app")
+		appTwo.DELETE(schema)
 	})
 })

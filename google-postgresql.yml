@@ -117,12 +117,12 @@ provision:
     overwrite: true
     type: string
   template_refs:
-    provider: terraform/cloudsql/provision/provider.tf
-    versions: terraform/cloudsql/provision/versions.tf
-    main: terraform/cloudsql/provision/main.tf
-    data: terraform/cloudsql/provision/data.tf
-    variables: terraform/cloudsql/provision/variables.tf
-    outputs: terraform/cloudsql/provision/outputs.tf
+    provider: terraform/cloudsql/provisionpostgresql/provider.tf
+    versions: terraform/cloudsql/provisionpostgresql/versions.tf
+    main: terraform/cloudsql/provisionpostgresql/main.tf
+    data: terraform/cloudsql/provisionpostgresql/data.tf
+    variables: terraform/cloudsql/provisionpostgresql/variables.tf
+    outputs: terraform/cloudsql/provisionpostgresql/outputs.tf
   outputs:
   - field_name: name
     type: string
@@ -142,6 +142,9 @@ provision:
   - field_name: use_tls
     type: boolean
     details: Using TLS for connection
+  - field_name: nologin_user_role
+    type: string
+    details: nologin_user_role
 bind:
   plan_inputs: []
   user_inputs: []
@@ -169,6 +172,10 @@ bind:
   - name: use_tls
     type: boolean
     default: ${instance.details["use_tls"]}
+    overwrite: true
+  - name: nologin_user_role
+    type: string
+    default: ${instance.details["nologin_user_role"]}
     overwrite: true
   template_refs:
     provider: terraform/cloudsql/bindpostgresql/provider.tf

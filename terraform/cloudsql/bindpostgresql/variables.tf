@@ -4,3 +4,8 @@ variable "port" { type = number }
 variable "admin_username" { type = string }
 variable "admin_password" { type = string }
 variable "use_tls" { type = bool }
+variable "nologin_user_role" { type = string }
+# variable "create_nologin_role" {
+#   default = false
+#   type = bool
+# }
