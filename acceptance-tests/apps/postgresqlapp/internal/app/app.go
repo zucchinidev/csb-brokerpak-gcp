@@ -22,6 +22,7 @@ func App(uri string) *mux.Router {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", aliveness).Methods(http.MethodHead, http.MethodGet)
+	r.HandleFunc("/{schema}/tables/{table}", handleCreateTable(db)).Methods(http.MethodPut)
 	r.HandleFunc("/{schema}", handleCreateSchema(db)).Methods(http.MethodPut)
 	r.HandleFunc("/{schema}", handleDropSchema(db)).Methods(http.MethodDelete)
 	r.HandleFunc("/{schema}/{key}", handleSet(db)).Methods(http.MethodPut)
@@ -58,6 +59,23 @@ func schemaName(r *http.Request) (string, error) {
 		return "", fmt.Errorf("schema name contains invalid characters")
 	default:
 		return schema, nil
+	}
+}
+
+func additionalTableName(r *http.Request) (string, error) {
+	table, ok := mux.Vars(r)["table"]
+
+	switch {
+	case !ok:
+		return "", fmt.Errorf("table missing")
+	case len(table) > 50:
+		return "", fmt.Errorf("table name too long")
+	case len(table) == 0:
+		return "", fmt.Errorf("table name cannot be zero length")
+	case !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(table):
+		return "", fmt.Errorf("table name contains invalid characters")
+	default:
+		return table, nil
 	}
 }
 

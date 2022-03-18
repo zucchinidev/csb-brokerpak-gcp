@@ -25,7 +25,7 @@ func handleDropSchema(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 
 		_, err = db.Exec(fmt.Sprintf(`DROP SCHEMA %s`, schema))
 		if err != nil {
-			fail(w, http.StatusBadRequest, "Error creating schema: %s", err)
+			fail(w, http.StatusBadRequest, "Error dropping schema: %s", err)
 			return
 		}
 

@@ -62,6 +62,12 @@ var _ = Describe("PostgreSQL", func() {
 		got3 := appTwo.GET("%s/%s", schema, key2)
 		Expect(got3).To(Equal(value2))
 
+		By("creating another table")
+		table := random.Name(random.WithMaxLength(10))
+		appTwo.PUT("","%s/tables/%s", schema, table)
+
+		// Maye test if we can alter a table? even if we cannot drop a schema or table being able to alter could be fine.
+		
 		By("dropping the schema using the second app")
 		appTwo.DELETE(schema)
 	})
