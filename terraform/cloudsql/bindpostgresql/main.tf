@@ -20,14 +20,6 @@ resource "random_password" "nologin_password" {
   min_special      = 2
 }
 
-# resource "postgresql_role" "nologin_role" {
-#   count = create_nologin_role ? 1 : 0
-#   name                = "nologin_role"
-#   password            = random_password.nologin_password.result
-#   login               = false
-#   // skip destroy
-# }
-
 resource "postgresql_role" "new_user" {
   name                = random_string.username.result
   password            = random_password.user_password.result

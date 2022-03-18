@@ -15,12 +15,12 @@ var _ = Describe("PostgreSQL", func() {
 		By("creating a service instance")
 		serviceInstance := services.CreateInstance("csb-google-postgres", "small")
 
-		defer serviceInstance.Delete()
+		// defer serviceInstance.Delete()
 
 		By("pushing the unstarted app twice")
 		appOne := apps.Push(apps.WithApp(apps.PostgreSQL))
 		appTwo := apps.Push(apps.WithApp(apps.PostgreSQL))
-		defer apps.Delete(appOne, appTwo)
+		// defer apps.Delete(appOne, appTwo)
 
 		By("binding the apps to the service instance")
 		binding := serviceInstance.Bind(appOne)
@@ -66,7 +66,7 @@ var _ = Describe("PostgreSQL", func() {
 		table := random.Name(random.WithMaxLength(10))
 		appTwo.PUT("","%s/tables/%s", schema, table)
 
-		// Maye test if we can alter a table? even if we cannot drop a schema or table being able to alter could be fine.
+		// May test if we can alter a table? even if we cannot drop a schema or table being able to alter could be fine.
 		
 		By("dropping the schema using the second app")
 		appTwo.DELETE(schema)

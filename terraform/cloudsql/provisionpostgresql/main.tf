@@ -42,47 +42,22 @@ resource "google_sql_user" "admin_user" {
 }
 
 # //create a non login user
-resource "random_string" "nologin_username" {
+resource "random_string" "createrole_username" {
   length  = 16
   special = false
 }
-resource "random_password" "nologin_password" {
+resource "random_password" "createrole_password" {
   length           = 16
   special          = true
   override_special = "_@"
 }
 
-resource "postgresql_role" "non_login_user" {
+resource "postgresql_role" "createrole_user" {
   depends_on  = [google_sql_user.admin_user]
-  name                = random_string.nologin_username.result
-  password            = random_password.nologin_password.result
-  login               = false
+  name                = random_string.createrole_username.result
+  password            = random_password.createrole_password.result
+  login               = true
+  create_role         = true
   skip_drop_role      = true
   skip_reassign_owned = true
 }
-
-# resource "null_resource" "create_nologin_role" {
-#   depends_on  = [google_sql_user.admin_user]
-
-#   provisioner "local-exec" {
-#     command = format("psql -h %s -d %s -U %s --no-password -c \"CREATE ROLE nologin_role WITH PASSWORD='%s';\"",
-#                      google_sql_database_instance.instance.first_ip_address,
-#                      google_sql_database.database.name,
-#                      google_sql_user.admin_user.name,
-#                      random_string.nologin_password.result)
-#     environment = {
-#       PGPASSWORD = google_sql_user.admin_user.password
-#     }
-#   }
-
-#   provisioner "local-exec" {
-# 	when = destroy
-#     command = format("psql -h %s -d %s -U %s --no-password -c \"DROP ROLE nologin_role;\"",
-#                      google_sql_database_instance.instance.first_ip_address,
-#                      google_sql_database.database.name,
-#                      google_sql_user.admin_user.name)
-#     environment = {
-#       PGPASSWORD = google_sql_user.admin_user.password
-#     }
-#   }
-# }
