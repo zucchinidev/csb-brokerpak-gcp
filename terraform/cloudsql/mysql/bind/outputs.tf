@@ -23,3 +23,8 @@ output "jdbcUrl" {
     random_password.password.result,
   var.use_tls)
 }
+output "client_ca_cert" { value = var.client_ca_cert }
+output "client_private_key" {
+    value = var.client_private_key
+    sensitive   = true
+}

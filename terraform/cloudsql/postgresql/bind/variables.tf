@@ -7,3 +7,6 @@ variable "use_tls" { type = bool }
 locals {
   port = 5432
 }
+
+variable "client_ca_cert" { type = string }
+variable "client_private_key" { type = string }

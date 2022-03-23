@@ -11,7 +11,7 @@ resource "google_sql_database_instance" "instance" {
     ip_configuration {
       ipv4_enabled    = false
       private_network = local.authorized_network_id
-      #require_ssl = var.use_tls
+      require_ssl = var.use_tls
     }
   }
 
@@ -38,4 +38,9 @@ resource "google_sql_user" "admin_user" {
   name     = random_string.username.result
   instance = google_sql_database_instance.instance.name
   password = random_password.password.result
+}
+
+resource "google_sql_ssl_cert" "client_cert" {
+  common_name = random_string.username.result
+  instance    = google_sql_database_instance.instance.name
 }
