@@ -61,3 +61,21 @@ resource "postgresql_role" "createrole_user" {
   skip_drop_role      = true
   skip_reassign_owned = true
 }
+
+resource "postgresql_grant" "db_access" {
+  depends_on  = [postgresql_role.createrole_user]
+  database    = var.db_name
+  role        = postgresql_role.createrole_user.name
+  object_type = "database"
+  privileges  = ["ALL"]
+}
+
+resource "postgresql_grant" "table_access" {
+  depends_on  = [postgresql_role.createrole_user]
+  database    = var.db_name
+  role        = postgresql_role.createrole_user.name
+  schema      = "public"
+  object_type = "table"
+  privileges  = ["ALL"]
+}
+
