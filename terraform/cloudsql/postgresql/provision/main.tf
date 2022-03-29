@@ -11,7 +11,7 @@ resource "google_sql_database_instance" "instance" {
     ip_configuration {
       ipv4_enabled    = var.public_ip
       private_network = local.authorized_network_id
-      #require_ssl = var.use_tls
+      require_ssl = var.use_tls
 
       dynamic "authorized_networks" {
         for_each = var.authorized_networks_cidrs
@@ -61,7 +61,10 @@ resource "random_password" "createrole_password" {
 }
 
 resource "postgresql_role" "createrole_user" {
-  depends_on  = [google_sql_user.admin_user]
+  depends_on  = [
+    google_sql_user.admin_user,
+    google_sql_ssl_cert.client_cert,
+  ]
   name                = random_string.createrole_username.result
   password            = random_password.createrole_password.result
   login               = true
@@ -84,3 +87,24 @@ resource "postgresql_grant" "table_access" {
   object_type = "table"
   privileges  = ["ALL"]
 }
+
+resource "local_file" "client_private_key" {
+    depends_on  = [google_sql_ssl_cert.client_cert]
+    content = google_sql_ssl_cert.client_cert.private_key
+    filename = "${path.module}/client_private_key.pem"
+    file_permission = "0600"
+}
+
+resource "local_file" "client_ca_cert" {
+    depends_on  = [google_sql_ssl_cert.client_cert]
+    content = google_sql_ssl_cert.client_cert.cert
+    filename = "${path.module}/client_ca_cert.pem"
+    file_permission = "0600"
+}
+
+resource "google_sql_ssl_cert" "client_cert" {
+  depends_on  = [google_sql_database_instance.instance]
+  common_name = random_string.username.result
+  instance    = google_sql_database_instance.instance.name
+}
+

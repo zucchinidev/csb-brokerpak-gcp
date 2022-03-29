@@ -10,5 +10,11 @@ provider "postgresql" {
   password  = google_sql_user.admin_user.password
   superuser = false
   database  = google_sql_database.database.name
-  sslmode   = "disable"
+  sslmode   = var.use_tls ? "require" : "disable"
+  clientcert {
+      cert = "${path.module}/client_ca_cert.pem"
+      key  = "${path.module}/client_private_key.pem"
+  }
 }
+
+provider "local" {}
