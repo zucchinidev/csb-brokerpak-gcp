@@ -1,10 +1,13 @@
 package app
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 
 	"github.com/gorilla/mux"
@@ -36,6 +39,20 @@ func aliveness(w http.ResponseWriter, r *http.Request) {
 }
 
 func connect(uri string) *sql.DB {
+	rootCertPool := x509.NewCertPool()
+	caCert := os.Getenv(`TODO`)
+
+	if ok := rootCertPool.AppendCertsFromPEM([]byte(caCert)); !ok {
+		log.Fatal("Failed to append CA to cert pool")
+	}
+
+	certs, err := tls.LoadX509KeyPair(os.Getenv(`ca_cert`), os.Getenv(`server_key`))
+	if err != nil {
+		log.Fatalf("failed to create key pair: %s", err)
+	}
+
+	// Create a TLS config with the CA/client key both configured
+
 	db, err := sql.Open("pgx", uri)
 	if err != nil {
 		log.Fatalf("failed to connect to database: %s", err)
