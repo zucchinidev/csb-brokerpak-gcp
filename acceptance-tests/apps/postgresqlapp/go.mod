@@ -7,6 +7,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/mitchellh/mapstructure v1.4.3
+	github.com/pkg/errors v0.8.1
 )
 
 require (

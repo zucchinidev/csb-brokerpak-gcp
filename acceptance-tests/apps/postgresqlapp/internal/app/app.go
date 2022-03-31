@@ -5,9 +5,12 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"fmt"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/stdlib"
+	"github.com/pkg/errors"
 	"log"
 	"net/http"
-	"os"
+	"postgresqlapp/internal/credentials"
 	"regexp"
 
 	"github.com/gorilla/mux"
@@ -20,8 +23,11 @@ const (
 	valueColumn = "valuedata"
 )
 
-func App(uri string) *mux.Router {
-	db := connect(uri)
+func App(config *credentials.Config) *mux.Router {
+	db, err := connect(config)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", aliveness).Methods(http.MethodHead, http.MethodGet)
@@ -38,38 +44,53 @@ func aliveness(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func connect(uri string) *sql.DB {
-	rootCertPool := x509.NewCertPool()
-	caCert := os.Getenv(`TODO`)
-
-	if ok := rootCertPool.AppendCertsFromPEM([]byte(caCert)); !ok {
-		log.Fatal("Failed to append CA to cert pool")
+func connect(config *credentials.Config) (*sql.DB, error) {
+	connStr, err := createCon(config)
+	if err != nil {
+		return nil, err
 	}
 
-	certs, err := tls.LoadX509KeyPair(os.Getenv(`ca_cert`), os.Getenv(`server_key`))
-	if err != nil {
-		log.Fatalf("failed to create key pair: %s", err)
-	}
+	db, err := sql.Open("pgx", connStr)
 
-	// Create a TLS config with the CA/client key both configured
-
-	db, err := sql.Open("pgx", uri)
 	if err != nil {
-		log.Fatalf("failed to connect to database: %s", err)
+		return nil, errors.Wrap(err, "failed to connect to database")
 	}
 	db.SetMaxIdleConns(0)
 
 	_, err = db.Exec(fmt.Sprintf(`CREATE TABLE IF NOT EXISTS public.%s (%s VARCHAR(255) NOT NULL, %s VARCHAR(255) NOT NULL)`, tableName, keyColumn, valueColumn))
 	if err != nil {
-		log.Fatalf("Error creating table: %s", err)
+		return nil, errors.Wrap(err, "error creating table")
 	}
 
 	_, err = db.Exec(fmt.Sprintf(`GRANT ALL ON TABLE public.%s TO PUBLIC`, tableName))
 	if err != nil {
-		log.Fatalf("Error granting table permissions: %s", err)
+		return nil, errors.Wrap(err, "error granting table permissions")
 	}
 
-	return db
+	return db, nil
+}
+
+func createCon(config *credentials.Config) (string, error) {
+	// Create a TLS config with the CA/client key both configured
+	parseConfig, err := pgx.ParseConfig(config.URI)
+	if err != nil {
+		return "", err
+	}
+	pair, err := tls.X509KeyPair([]byte(config.ClientCACert), []byte(config.ClientPrivateKey))
+	if err != nil {
+		return "", err
+	}
+	certPool := x509.NewCertPool()
+	//if ok := certPool.AppendCertsFromPEM([]byte(caCert)); !ok {
+	//	log.Fatal("Failed to append CA to cert pool")
+	//}
+
+	parseConfig.TLSConfig = &tls.Config{
+		InsecureSkipVerify: true,
+		Certificates:       []tls.Certificate{pair},
+		RootCAs:            certPool,
+	}
+	return stdlib.RegisterConnConfig(parseConfig), nil
 }
 
 func fail(w http.ResponseWriter, code int, format string, a ...interface{}) {
