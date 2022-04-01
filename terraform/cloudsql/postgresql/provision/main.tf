@@ -88,17 +88,17 @@ resource "postgresql_grant" "table_access" {
   privileges  = ["ALL"]
 }
 
-resource "local_file" "client_private_key" {
+resource "local_file" "sslkey" {
     depends_on  = [google_sql_ssl_cert.client_cert]
     content = google_sql_ssl_cert.client_cert.private_key
-    filename = "${path.module}/client_private_key.pem"
+    filename = "${path.module}/sslkey.pem"
     file_permission = "0600"
 }
 
-resource "local_file" "client_ca_cert" {
+resource "local_file" "sslcert" {
     depends_on  = [google_sql_ssl_cert.client_cert]
     content = google_sql_ssl_cert.client_cert.cert
-    filename = "${path.module}/client_ca_cert.pem"
+    filename = "${path.module}/sslcert.pem"
     file_permission = "0600"
 }
 

@@ -55,6 +55,7 @@ provision:
     type: boolean
     details: Use TLS for connection
     default: true
+    prohibit_update: true
   - field_name: credentials
     type: string
     details: GCP credentials
@@ -122,12 +123,6 @@ provision:
     details: Assign a public ip to the database
     default: false
     prohibit_update: true
-  - field_name: client_ca_cert
-    type: string
-    details: The client CA Cert to authenticate with SQL instance
-  - field_name: client_private_key
-    type: string
-    details: The client CA Cert to authenticate with SQL instance
   computed_inputs:
   - name: labels
     default: ${json.marshal(request.default_labels)}
@@ -160,12 +155,15 @@ provision:
   - field_name: use_tls
     type: boolean
     details: Using TLS for connection
-  - field_name: client_ca_cert
+  - field_name: sslcert
     type: string
     details: The client CA Cert to authenticate with SQL instance
-  - field_name: client_private_key
+  - field_name: sslkey
     type: string
     details: The client CA Cert to authenticate with SQL instance
+  - field_name: sslrootcert
+    type: string
+    details: The CA Certificate used to connect to the SQL Instance via SSL.
 bind:
   plan_inputs: []
   user_inputs: []
@@ -190,13 +188,17 @@ bind:
     type: boolean
     default: ${instance.details["use_tls"]}
     overwrite: true
-  - name: client_ca_cert
+  - name: sslcert
     type: string
-    default: ${instance.details["client_ca_cert"]}
+    default: ${instance.details["sslcert"]}
     overwrite: true
-  - name: client_private_key
+  - name: sslkey
     type: string
-    default: ${instance.details["client_private_key"]}
+    default: ${instance.details["sslkey"]}
+    overwrite: true
+  - name: sslrootcert
+    type: string
+    default: ${instance.details["sslrootcert"]}
     overwrite: true
   template_refs:
     provider: terraform/cloudsql/postgresql/bind/provider.tf
@@ -220,12 +222,6 @@ bind:
   - field_name: jdbcUrl
     type: string
     details: The jdbc url to connect to the database instance and database.
-  - field_name: client_ca_cert
-    type: string
-    details: The client CA Cert to authenticate with SQL instance
-  - field_name: client_private_key
-    type: string
-    details: The client CA Cert to authenticate with SQL instance
 examples:
 - name: small configuration
   description: Create a small postgres instance

@@ -8,5 +8,6 @@ locals {
   port = 5432
 }
 
-variable "client_ca_cert" { type = string }
-variable "client_private_key" { type = string }
+variable "sslcert" { type = string }
+variable "sslkey" { type = string }
+variable "sslrootcert" { type = string }

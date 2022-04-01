@@ -14,6 +14,3 @@ variable "database_version" { type = string }
 variable "credentials" { type = string }
 variable "project" { type = string }
 variable "use_tls" { type = bool }
-
-variable "client_ca_cert" { type = string }
-variable "client_private_key" { type = string }

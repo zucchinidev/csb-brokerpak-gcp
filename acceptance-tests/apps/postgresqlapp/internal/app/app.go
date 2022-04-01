@@ -1,13 +1,10 @@
 package app
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"database/sql"
 	"fmt"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/stdlib"
 	"github.com/pkg/errors"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"postgresqlapp/internal/credentials"
@@ -15,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	//_ "github.com/lib/pq"
 )
 
 const (
@@ -45,7 +43,7 @@ func aliveness(w http.ResponseWriter, r *http.Request) {
 }
 
 func connect(config *credentials.Config) (*sql.DB, error) {
-	connStr, err := createCon(config)
+	connStr, err := createConnStr(config)
 	if err != nil {
 		return nil, err
 	}
@@ -69,28 +67,36 @@ func connect(config *credentials.Config) (*sql.DB, error) {
 
 	return db, nil
 }
-
-func createCon(config *credentials.Config) (string, error) {
-	// Create a TLS config with the CA/client key both configured
-	parseConfig, err := pgx.ParseConfig(config.URI)
+func createConnStr(config *credentials.Config) (string, error) {
+	sslrootcert, err := writeToFile(config.SSLRootCert)
 	if err != nil {
 		return "", err
 	}
-	pair, err := tls.X509KeyPair([]byte(config.ClientCACert), []byte(config.ClientPrivateKey))
+	sslkey, err := writeToFile(config.SSLKey)
 	if err != nil {
 		return "", err
 	}
-	certPool := x509.NewCertPool()
-	//if ok := certPool.AppendCertsFromPEM([]byte(caCert)); !ok {
-	//	log.Fatal("Failed to append CA to cert pool")
-	//}
-
-	parseConfig.TLSConfig = &tls.Config{
-		InsecureSkipVerify: true,
-		Certificates:       []tls.Certificate{pair},
-		RootCAs:            certPool,
+	sslcert, err := writeToFile(config.SSLCert)
+	if err != nil {
+		return "", err
 	}
-	return stdlib.RegisterConnConfig(parseConfig), nil
+	return fmt.Sprintf("%s?sslmode=verify-ca&sslrootcert=%s&sslkey=%s&sslcert=%s", config.URI, sslrootcert, sslkey, sslcert), nil
+}
+
+func writeToFile(data string) (string, error) {
+	file, err := ioutil.TempFile("", "")
+	if err != nil {
+		return "", err
+	}
+	_, err = file.Write([]byte(data))
+	if err != nil {
+		return "", err
+	}
+	err = file.Close()
+	if err != nil {
+		return "", err
+	}
+	return file.Name(), nil
 }
 
 func fail(w http.ResponseWriter, code int, format string, a ...interface{}) {

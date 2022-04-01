@@ -12,8 +12,8 @@ provider "postgresql" {
   database  = google_sql_database.database.name
   sslmode   = var.use_tls ? "require" : "disable"
   clientcert {
-      cert = "${path.module}/client_ca_cert.pem"
-      key  = "${path.module}/client_private_key.pem"
+      cert = "${path.module}/sslcert.pem"
+      key  = "${path.module}/sslkey.pem"
   }
 }
 

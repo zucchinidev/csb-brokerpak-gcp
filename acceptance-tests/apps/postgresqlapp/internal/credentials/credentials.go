@@ -8,10 +8,10 @@ import (
 )
 
 type Config struct {
-	URI              string `mapstructure:"uri"`
-	ClientCACert     string `mapstructure:"client_ca_cert"`
-	ClientPrivateKey string `mapstructure:"client_private_key"`
-	Hostname         string `mapstructure:"hostname"`
+	URI         string `mapstructure:"uri"`
+	SSLCert     string `mapstructure:"sslcert"`
+	SSLKey      string `mapstructure:"sslkey"`
+	SSLRootCert string `mapstructure:"sslrootcert"`
 }
 
 func Read() (*Config, error) {
@@ -29,7 +29,7 @@ func Read() (*Config, error) {
 		return nil, fmt.Errorf("failed to decode credentials: %w", err)
 	}
 
-	if c.URI == "" {
+	if c.URI == "" && c.SSLKey == "" && c.SSLCert == "" && c.SSLRootCert == "" {
 		return nil, fmt.Errorf("parsed credentials are not valid")
 	}
 

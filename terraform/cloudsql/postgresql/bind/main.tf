@@ -21,14 +21,14 @@ resource "postgresql_role" "new_user" {
   ]
 }
 
-resource "local_file" "client_ca_cert" {
-    content = var.client_ca_cert
-    filename = "${path.module}/client_ca_cert.pem"
+resource "local_file" "sslcert" {
+    content = var.sslcert
+    filename = "${path.module}/sslcert.pem"
     file_permission = "0600"
 }
 
-resource "local_file" "client_private_key" {
-    content = var.client_private_key
-    filename = "${path.module}/client_private_key.pem"
+resource "local_file" "sslkey" {
+    content = var.sslkey
+    filename = "${path.module}/sslkey.pem"
     file_permission = "0600"
 }
