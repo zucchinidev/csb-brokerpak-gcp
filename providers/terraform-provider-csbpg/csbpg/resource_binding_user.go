@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/lib/pq"
 	"log"
+	"strings"
 )
 
 func resourceBindingUser() *schema.Resource {
@@ -71,7 +73,7 @@ func resourceBindingUserCreate(ctx context.Context, d *schema.ResourceData, m an
 	defer db.Close()
 	log.Println("[DEBUG] connected")
 
-	exists, err := roleExists(ctx, db, sharedRole)
+	exists, err := roleExists(db, sharedRole)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -86,7 +88,7 @@ func resourceBindingUserCreate(ctx context.Context, d *schema.ResourceData, m an
 
 	log.Println("[DEBUG] create user")
 	// TODO: can't use $1 because this statement can't be prepared, but using %s looks unsafe
-	_, err = db.Exec(fmt.Sprintf("CREATE ROLE %s WITH LOGIN PASSWORD '%s' INHERIT IN ROLE %s", username, password, sharedRole))
+	_, err = db.Exec(fmt.Sprintf("CREATE ROLE %s WITH LOGIN PASSWORD %s INHERIT IN ROLE %s", pq.QuoteIdentifier(username), safeQuote(password), pq.QuoteIdentifier(sharedRole)))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -107,4 +109,8 @@ func resourceBindingUserUpdate(ctx context.Context, d *schema.ResourceData, m an
 
 func resourceBindingUserDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	return nil
+}
+
+func safeQuote(s string) string {
+	return fmt.Sprintf("'%s'", strings.ReplaceAll(strings.ReplaceAll(s, `\`, `\\`), `'`, `\\`))
 }

@@ -26,6 +26,10 @@ terraform_binaries:
   provider: cyrilgdn/postgresql
   source: https://github.com/cyrilgdn/terraform-provider-postgresql/archive/v1.15.0.zip
   url_template: https://github.com/cyrilgdn/${name}/releases/download/v${version}/${name}_${version}_${os}_${arch}.zip
+- name: terraform-provider-csbpg
+  version: 1.0.0
+  provider: cloud-service-broker/csbpg
+  url_template: ./providers/${name}/cloudfoundry.org/cloud-service-broker/csbpg/${version}/${os}_${arch}/terraform-provider-csbpg_v${version}
 env_config_mapping:
   GOOGLE_CREDENTIALS: gcp.credentials
   GOOGLE_PROJECT: gcp.project

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/lib/pq"
 	"log"
 )
 
@@ -48,7 +49,7 @@ func resourceSharedRoleCreate(ctx context.Context, d *schema.ResourceData, m any
 	defer db.Close()
 	log.Println("[DEBUG] connected")
 
-	exists, err := roleExists(ctx, db, name)
+	exists, err := roleExists(db, name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -56,7 +57,7 @@ func resourceSharedRoleCreate(ctx context.Context, d *schema.ResourceData, m any
 	if !exists {
 		log.Println("[DEBUG] creating role")
 		// TODO: can't use $1 because this statement can't be prepared, but using %s looks unsafe
-		_, err = db.Exec(fmt.Sprintf("CREATE ROLE %s WITH NOLOGIN", name))
+		_, err = db.Exec(fmt.Sprintf("CREATE ROLE %s WITH NOLOGIN", pq.QuoteIdentifier(name)))
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -64,7 +65,7 @@ func resourceSharedRoleCreate(ctx context.Context, d *schema.ResourceData, m any
 
 	log.Println("[DEBUG] granting")
 	// TODO: can't use $1 because this statement can't be prepared, but using %s looks unsafe
-	_, err = db.Exec(fmt.Sprintf("GRANT CREATE ON DATABASE %s TO %s", cf.database, name))
+	_, err = db.Exec(fmt.Sprintf("GRANT CREATE ON DATABASE %s TO %s", pq.QuoteIdentifier(cf.database), pq.QuoteIdentifier(name)))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -86,7 +87,7 @@ func resourceSharedRoleDelete(ctx context.Context, d *schema.ResourceData, m any
 	return nil
 }
 
-func roleExists(ctx context.Context, db *sql.DB, name string) (bool, error) {
+func roleExists(db *sql.DB, name string) (bool, error) {
 	log.Println("[DEBUG] ENTRY roleExists()")
 	defer log.Println("[DEBUG] EXIT roleExists()")
 

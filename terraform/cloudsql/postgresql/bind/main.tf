@@ -20,3 +20,13 @@ resource "postgresql_role" "new_user" {
     var.admin_username
   ]
 }
+
+resource "csbpg_shared_role" "shared_role" {
+  name = "fakesharedrole"
+}
+
+resource "csbpg_binding_user" "binding_user" {
+  username = "fakeusername"
+  password = "fakepassword"
+  shared_role = csbpg_shared_role.shared_role.name
+}

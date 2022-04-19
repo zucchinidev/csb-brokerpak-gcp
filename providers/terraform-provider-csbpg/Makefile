@@ -9,5 +9,5 @@ build: cloudfoundry.org ## build the provider
 cloudfoundry.org: *.go */*.go
 	mkdir -p cloudfoundry.org/cloud-service-broker/csbpg/1.0.0/linux_amd64
 	mkdir -p cloudfoundry.org/cloud-service-broker/csbpg/1.0.0/darwin_amd64
-	GOOS=linux go build -o cloudfoundry.org/cloud-service-broker/csbpg/1.0.0/linux_amd64/terraform-provider-csbpg
-	GOOS=darwin go build -o cloudfoundry.org/cloud-service-broker/csbpg/1.0.0/darwin_amd64/terraform-provider-csbpg
+	GOOS=linux go build -o cloudfoundry.org/cloud-service-broker/csbpg/1.0.0/linux_amd64/terraform-provider-csbpg_v1.0.0
+	GOOS=darwin go build -o cloudfoundry.org/cloud-service-broker/csbpg/1.0.0/darwin_amd64/terraform-provider-csbpg_v1.0.0
