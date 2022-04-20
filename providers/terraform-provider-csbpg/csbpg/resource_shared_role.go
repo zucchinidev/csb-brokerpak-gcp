@@ -94,7 +94,7 @@ func roleExists(db *sql.DB, name string) (bool, error) {
 	// TODO: can't use $1 because this statement can't be prepared, but using %s looks unsafe
 	rows, err := db.Query(fmt.Sprintf("SELECT FROM pg_catalog.pg_roles WHERE rolname = '%s'", name))
 	if err != nil {
-		return false, fmt.Errorf("error finding role %s: %w", name, err)
+		return false, fmt.Errorf("error finding role %q: %w", name, err)
 	}
 	defer rows.Close()
 	return rows.Next(), nil

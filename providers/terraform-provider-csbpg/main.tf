@@ -15,12 +15,8 @@ provider "csbpg" {
   database = "postgres"
 }
 
-resource "csbpg_shared_role" "shared_role" {
-  name = "flibble"
-}
-
 resource "csbpg_binding_user" "binding_user" {
   username = "bumble"
   password = "womble"
-  shared_role = csbpg_shared_role.shared_role.name
+  shared_role = "flibble"
 }

@@ -9,11 +9,12 @@ import (
 const uriFormat = "postgres://%s:%s@%s:%d/%s?sslmode=disable"
 
 type connectionFactory struct {
-	host     string
-	port     int
-	username string
-	password string
-	database string
+	host          string
+	port          int
+	username      string
+	password      string
+	database      string
+	dataOwnerRole string
 }
 
 func (c connectionFactory) Connect() (*sql.DB, error) {

@@ -22,10 +22,6 @@ func resourceBindingUser() *schema.Resource {
 				Required:  true,
 				Sensitive: true,
 			},
-			"shared_role": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 		},
 		CreateContext: resourceBindingUserCreate,
 		ReadContext:   resourceBindingUserRead,
@@ -41,26 +37,7 @@ func resourceBindingUserCreate(ctx context.Context, d *schema.ResourceData, m an
 	defer log.Println("[DEBUG] EXIT resourceSharedRoleCreate()")
 
 	username := d.Get("username").(string)
-	if username == "" {
-		return diag.Diagnostics{{
-			Severity: diag.Error,
-			Summary:  "invalid 'username'",
-		}}
-	}
 	password := d.Get("password").(string)
-	if password == "" {
-		return diag.Diagnostics{{
-			Severity: diag.Error,
-			Summary:  "invalid 'password'",
-		}}
-	}
-	sharedRole := d.Get("shared_role").(string)
-	if sharedRole == "" {
-		return diag.Diagnostics{{
-			Severity: diag.Error,
-			Summary:  "invalid 'shared_role'",
-		}}
-	}
 
 	id := fmt.Sprintf("bindinguser/%s", username)
 
@@ -73,22 +50,30 @@ func resourceBindingUserCreate(ctx context.Context, d *schema.ResourceData, m an
 	defer db.Close()
 	log.Println("[DEBUG] connected")
 
-	exists, err := roleExists(db, sharedRole)
+	exists, err := roleExists(db, cf.dataOwnerRole)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	if !exists {
-		log.Println("[DEBUG] role does not exist")
-		return diag.Diagnostics{{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("shared_role %s does not exist", sharedRole),
-		}}
+		log.Println("[DEBUG] data owner role does not exist - creating")
+		// TODO: can't use $1 because this statement can't be prepared, but using %s looks unsafe
+		_, err = db.Exec(fmt.Sprintf("CREATE ROLE %s WITH NOLOGIN", pq.QuoteIdentifier(cf.dataOwnerRole)))
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
-	log.Println("[DEBUG] create user")
+	log.Println("[DEBUG] granting data owner role")
 	// TODO: can't use $1 because this statement can't be prepared, but using %s looks unsafe
-	_, err = db.Exec(fmt.Sprintf("CREATE ROLE %s WITH LOGIN PASSWORD %s INHERIT IN ROLE %s", pq.QuoteIdentifier(username), safeQuote(password), pq.QuoteIdentifier(sharedRole)))
+	_, err = db.Exec(fmt.Sprintf("GRANT CREATE ON DATABASE %s TO %s", pq.QuoteIdentifier(cf.database), pq.QuoteIdentifier(cf.dataOwnerRole)))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	log.Println("[DEBUG] create binding user")
+	// TODO: can't use $1 because this statement can't be prepared, but using %s looks unsafe
+	_, err = db.Exec(fmt.Sprintf("CREATE ROLE %s WITH LOGIN PASSWORD %s INHERIT IN ROLE %s", pq.QuoteIdentifier(username), safeQuote(password), pq.QuoteIdentifier(cf.dataOwnerRole)))
 	if err != nil {
 		return diag.FromErr(err)
 	}
