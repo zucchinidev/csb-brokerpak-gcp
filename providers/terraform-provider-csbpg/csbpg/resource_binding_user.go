@@ -2,6 +2,7 @@ package csbpg
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -33,6 +34,7 @@ func resourceBindingUser() *schema.Resource {
 }
 
 func resourceBindingUserCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+
 	log.Println("[DEBUG] ENTRY resourceSharedRoleCreate()")
 	defer log.Println("[DEBUG] EXIT resourceSharedRoleCreate()")
 
@@ -50,29 +52,12 @@ func resourceBindingUserCreate(ctx context.Context, d *schema.ResourceData, m an
 	defer db.Close()
 	log.Println("[DEBUG] connected")
 
-	exists, err := roleExists(db, cf.dataOwnerRole)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if !exists {
-		log.Println("[DEBUG] data owner role does not exist - creating")
-		// TODO: can't use $1 because this statement can't be prepared, but using %s looks unsafe
-		_, err = db.Exec(fmt.Sprintf("CREATE ROLE %s WITH NOLOGIN", pq.QuoteIdentifier(cf.dataOwnerRole)))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	log.Println("[DEBUG] granting data owner role")
-	// TODO: can't use $1 because this statement can't be prepared, but using %s looks unsafe
-	_, err = db.Exec(fmt.Sprintf("GRANT CREATE ON DATABASE %s TO %s", pq.QuoteIdentifier(cf.database), pq.QuoteIdentifier(cf.dataOwnerRole)))
+	err = createDataOwnerRole(db, cf)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	log.Println("[DEBUG] create binding user")
-	// TODO: can't use $1 because this statement can't be prepared, but using %s looks unsafe
 	_, err = db.Exec(fmt.Sprintf("CREATE ROLE %s WITH LOGIN PASSWORD %s INHERIT IN ROLE %s", pq.QuoteIdentifier(username), safeQuote(password), pq.QuoteIdentifier(cf.dataOwnerRole)))
 	if err != nil {
 		return diag.FromErr(err)
@@ -98,4 +83,16 @@ func resourceBindingUserDelete(ctx context.Context, d *schema.ResourceData, m an
 
 func safeQuote(s string) string {
 	return fmt.Sprintf("'%s'", strings.ReplaceAll(strings.ReplaceAll(s, `\`, `\\`), `'`, `\\`))
+}
+
+func roleExists(db *sql.DB, name string) (bool, error) {
+	log.Println("[DEBUG] ENTRY roleExists()")
+	defer log.Println("[DEBUG] EXIT roleExists()")
+
+	rows, err := db.Query(fmt.Sprintf("SELECT FROM pg_catalog.pg_roles WHERE rolname = '%s'", name))
+	if err != nil {
+		return false, fmt.Errorf("error finding role %q: %w", name, err)
+	}
+	defer rows.Close()
+	return rows.Next(), nil
 }
