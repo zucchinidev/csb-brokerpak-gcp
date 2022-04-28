@@ -77,7 +77,7 @@ var _ = Describe("SSL Postgres Bindings", func() {
 		session.Terminate()
 	})
 
-	It("creates a binding user", func() {
+	FIt("creates a binding user", func() {
 		dataOwnerRole := uuid.New().String()
 		bindingUsername := uuid.New().String()
 		bindingPassword := uuid.New().String()

@@ -14,5 +14,10 @@ terraform {
       source  = "hashicorp/local"
       version = ">=2.2.2"
     }
+
+    csbpg = {
+      source  = "cloud-service-broker/csbpg"
+      version = "1.0.0"
+    }
   }
 }

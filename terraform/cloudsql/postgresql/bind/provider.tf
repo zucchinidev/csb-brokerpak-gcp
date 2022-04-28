@@ -1,14 +1,15 @@
-provider "postgresql" {
-  host        = var.hostname
-  port        = local.port
-  username    = var.admin_username
-  password    = var.admin_password
-  superuser   = false
-  database    = var.db_name
+provider "csbpg" {
+  host            = var.hostname
+  port            = local.port
+  username        = var.admin_username
+  password        = var.admin_password
+  database        = var.db_name
+  data_owner_role = "data_owner_role"
+
   sslmode     = "verify-ca"
-  sslrootcert = local_file.sslrootcert.filename
+  sslrootcert = var.sslrootcert
   clientcert {
-    cert = local_file.sslcert.filename
-    key  = local_sensitive_file.sslkey.filename
+    cert = var.sslcert
+    key  = var.sslkey
   }
 }

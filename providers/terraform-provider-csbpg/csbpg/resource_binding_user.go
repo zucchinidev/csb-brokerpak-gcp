@@ -47,8 +47,6 @@ func resourceBindingUserCreate(ctx context.Context, d *schema.ResourceData, m an
 	username := d.Get(bindingUsernameKey).(string)
 	password := d.Get(bindingPasswordKey).(string)
 
-	id := fmt.Sprintf("bindinguser/%s", username)
-
 	cf := m.(connectionFactory)
 
 	db, err := cf.Connect()
@@ -69,18 +67,21 @@ func resourceBindingUserCreate(ctx context.Context, d *schema.ResourceData, m an
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[DEBUG] setting ID %s\n", id)
-	d.SetId(id)
+	log.Printf("[DEBUG] setting ID %s\n", username)
+	d.SetId(username)
 
 	return nil
 }
 
 func resourceBindingUserRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
+	//username := d.Get(bindingUsernameKey).(string)
+	d.SetId("foo")
+
 	return nil
 }
 
 func resourceBindingUserUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-	return nil
+	return diag.FromErr(fmt.Errorf("update lifecycle not implemented"))
 }
 
 func resourceBindingUserDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
