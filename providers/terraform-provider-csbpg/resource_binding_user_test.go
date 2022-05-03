@@ -25,8 +25,10 @@ import (
 )
 
 const (
-	adminUsername = "postgres"
-	hostname      = "localhost"
+	adminUsername         = "postgres"
+	cloudsqlsuperuser     = "cloudsqlsuperuser"
+	cloudsqlsuperpassword = "password"
+	hostname              = "localhost"
 )
 
 //go:embed "testfixtures/ssl_postgres/certs/ca.crt"
@@ -55,6 +57,7 @@ var _ = Describe("SSL Postgres Bindings", func() {
 			"-e", fmt.Sprintf("POSTGRES_DB=%s", database),
 			"-p", fmt.Sprintf("%d:5432", port),
 			"--mount", "source=ssl_postgres,destination=/mnt",
+			"--mount", fmt.Sprintf("type=bind,source=%s/testfixtures/ssl_postgres/init.sql,target=/docker-entrypoint-initdb.d/init.sql", getPWD()),
 			"-t", "postgres",
 			"-c", "config_file=/mnt/pgconf/postgresql.conf",
 			"-c", "hba_file=/mnt/pgconf/pg_hba.conf",
@@ -71,6 +74,7 @@ var _ = Describe("SSL Postgres Bindings", func() {
 			defer db.Close()
 			return db.Ping()
 		}).WithTimeout(10 * time.Second).WithPolling(time.Second).Should(Succeed())
+
 	})
 
 	AfterEach(func() {
@@ -145,7 +149,7 @@ EOF
 
 			_, err = bindingDB.Exec("INSERT INTO foo.bar (pk, name) VALUES(1,'Test name');")
 			Expect(err).NotTo(HaveOccurred())
-
+			By("By deleting the resource")
 			return nil
 		}, func(state *terraform.State) error {
 			By("CHECKING RESOURCE DELETE")

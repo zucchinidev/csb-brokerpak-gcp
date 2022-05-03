@@ -54,6 +54,19 @@ func resourceBindingUserCreate(ctx context.Context, d *schema.ResourceData, m an
 		return diag.FromErr(err)
 	}
 	defer db.Close()
+
+	// Create superuser
+	//suUsername := uuid.New().String()
+	//suPassword := uuid.New().String()
+	//
+	//_, err = db.Exec(fmt.Sprintf("CREATE ROLE %s LOGIN SUPERUSER PASSWORD %s", pq.QuoteIdentifier(suUsername), pq.QuoteIdentifier(suPassword)))
+	//if err != nil {
+	//	return diag.FromErr(err)
+	//}
+	// Create dataOwnerRole with superuser
+	// Create binding user
+	// Delete superuser
+
 	log.Println("[DEBUG] connected")
 
 	err = createDataOwnerRole(db, cf)
@@ -74,8 +87,27 @@ func resourceBindingUserCreate(ctx context.Context, d *schema.ResourceData, m an
 }
 
 func resourceBindingUserRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-	//username := d.Get(bindingUsernameKey).(string)
-	d.SetId("foo")
+	log.Println("[DEBUG] ENTRY resourceBindingUserRead()")
+	defer log.Println("[DEBUG] EXIT resourceBindingUserRead()")
+
+	username := d.Get(bindingUsernameKey).(string)
+
+	cf := m.(connectionFactory)
+
+	db, err := cf.Connect()
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	defer db.Close()
+	log.Println("[DEBUG] connected")
+
+	rows, err := db.Query(fmt.Sprintf("SELECT FROM pg_catalog.pg_roles WHERE rolname = '%s'", username))
+	if !rows.Next() {
+		d.SetId("")
+		return nil
+	}
+
+	d.SetId(username)
 
 	return nil
 }
@@ -89,6 +121,11 @@ func resourceBindingUserDelete(ctx context.Context, d *schema.ResourceData, m an
 	log.Println("[DEBUG] ENTRY resourceBindingUserDelete()")
 	defer log.Println("[DEBUG] EXIT resourceBindingUserDelete()")
 
+	// Create superuser
+	// Perform reassign
+	// Drop binding user
+	// Delete Superuser
+
 	username := d.Get(bindingUsernameKey).(string)
 
 	cf := m.(connectionFactory)
@@ -99,6 +136,11 @@ func resourceBindingUserDelete(ctx context.Context, d *schema.ResourceData, m an
 	}
 	defer db.Close()
 	log.Println("[DEBUG] connected")
+
+	_, err = db.Exec(fmt.Sprintf("SET ROLE %s ", pq.QuoteIdentifier(cf.dataOwnerRole)))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	_, err = db.Exec(fmt.Sprintf("REASSIGN OWNED BY %s TO %s", pq.QuoteIdentifier(username), pq.QuoteIdentifier(cf.dataOwnerRole)))
 	if err != nil {

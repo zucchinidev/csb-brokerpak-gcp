@@ -5,7 +5,6 @@ provider "csbpg" {
   password        = var.admin_password
   database        = var.db_name
   data_owner_role = "data_owner_role"
-
   sslmode     = "verify-ca"
   sslrootcert = var.sslrootcert
   clientcert {
